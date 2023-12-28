@@ -31,9 +31,8 @@ export const deleteCard = (req, res) => {
       }
         res.status(200).send({ message: 'Карточка успешно удалена', card: card })
     })
-    .catch((err) => {
-        res.status(500).send({ message: 'Произошла ошибка', error: err.message });
-      })}
+    .catch(err => res.status(500).send({ message: 'Ошибка на стороне сервера'}))
+}
 
 export const likeCard = (req, res) => {
     Card.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
@@ -60,7 +59,5 @@ export const dislikeCard = (req, res) => {
             }
             res.status(200).send({ message: 'Вам разонравилась карточка:(', card: card });
           })
-          .catch((error) => {
-            res.status(500).send({ message: 'Произошла ошибка', error: error.message });
-          });
+          .catch(err => res.status(500).send({ message: 'Ошибка на стороне сервера'}))
         };

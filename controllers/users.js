@@ -27,11 +27,8 @@ import User from '../models/User'
 
   export const getUserById = (req, res) => {
     const { _id } = req.user
-    User.findById(_id)
+    User.findById(_id).orFail(() => new Error(NotFoundError))
     .then((user) => {
-      if(!user) {
-        throw new Error('NotFoundError')
-      }
         res.status(200).send(user)
     })
     .catch((error) => {
@@ -40,3 +37,43 @@ import User from '../models/User'
       }
       return res.status(500).send({ message: 'Произошла ошибка' });
     })};
+
+    export const updateProfile = (req, res) => {
+        const { name, about } = req.body;
+        User.findByIdAndUpdate(
+          req.user._id,
+          { name, about },
+          {
+            new: true,
+            runValidators: true,
+            upsert: true
+          }
+        )
+        .then((user => {
+          if(!user) {
+            return res.status(404).send({ message: "Пользователь не найден"})
+          }
+          res.send(user)
+        }))
+        .catch(err => res.status(500).send({ message: "Произошла ошибка"}))
+    }
+
+    export const updateAvatar = (req, res) => {
+        const { avatar } = req.body;
+        User.findByIdAndUpdate(
+          req.user._id,
+          { avatar },
+          {
+            new: true,
+            runValidators: true,
+            upsert: true
+          }
+        )
+        .then((user => {
+          if(!user) {
+            return res.status(404).send({ message: "Пользователь не найден"})
+          }
+          res.send(user)
+        }))
+        .catch(err => res.status(500).send({ message: "Произошла ошибка"}))
+    }
