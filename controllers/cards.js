@@ -2,7 +2,8 @@ import Card from '../models/Card'
 
 export const createCard = (req, res) => {
     const { name, link } = req.body;
-    Card.create({ name, link })
+    console.log(req.body)
+    Card.create({ name, link, owner: req.user._id })
     .then(card => res.status(200).send(card))
     .catch((err) => {
         if(err.name === 'ValidationError') {
@@ -22,8 +23,8 @@ export const getCards = (req, res) => {
 
 export const deleteCard = (req, res) => {
     const { cardId } = req.params
-    console.log(req.params)
     Card.findByIdAndDelete(cardId)
+    .populate('owner')
     .then((card) => {
       if(!card) {
         return res.status(404).send({ message: 'Карточка не найдена' });
@@ -34,3 +35,32 @@ export const deleteCard = (req, res) => {
         res.status(500).send({ message: 'Произошла ошибка', error: err.message });
       })}
 
+export const likeCard = (req, res) => {
+    Card.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
+    { new: true })
+    .populate(['owner', 'likes'])
+    .then((card) => {
+        if(!card) {
+            return res.status(404).send({ message: 'Карточка не найдена' });
+        }
+        res.status(201).send({ message: 'Вам понравилась эта карточка', card: card })
+    })
+    .catch(() => res.status(404).send({ message: 'Карточка не найдена' }))
+}
+
+export const dislikeCard = (req, res) => {
+    Card.findByIdAndUpdate(
+        req.params.cardId,
+        { $pull: { likes: req.user._id } }, // убрать _id из массива
+        { new: true })
+        .populate(['owner', 'likes'])
+        .then((card) => {
+            if (!card) {
+              return res.status(404).send({ message: 'Карточка не найдена' });
+            }
+            res.status(200).send({ message: 'Вам разонравилась карточка:(', card: card });
+          })
+          .catch((error) => {
+            res.status(500).send({ message: 'Произошла ошибка', error: error.message });
+          });
+        };
