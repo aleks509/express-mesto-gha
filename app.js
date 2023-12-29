@@ -1,6 +1,6 @@
-import express from "express";
-import bodyParser from "body-parser";
 import mongoose from "mongoose";
+import bodyParser from "body-parser";
+import express from "express";
 import router from "./routes/index";
 
 const { PORT = 3000 } = process.env;
