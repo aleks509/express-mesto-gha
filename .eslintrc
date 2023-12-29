@@ -18,7 +18,8 @@
     ],
     "rules": {
         "no-underscore-dangle": ["error", { "allow": ["_id"] }],
-        "quotes": ["error", "double"]
+        "quotes": ["error", "double"],
+        "import/extensions": ["error", "ignorePackages", { "js": "never" }]
     },
     "settings": {
         "react": {
