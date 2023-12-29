@@ -1,27 +1,29 @@
 import User from "../models/User";
 
+const handleValidationError = (error, res) => {
+  if (error.name === "ValidationError") {
+    return res
+      .status(400)
+      .send({ message: "Переданы некорректные данные" });
+  }
+  return res.status(500).send({ message: "Ошибка на стороне сервера" });
+};
+
 export const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
-    .then((user) => res.status(200).send({
+    .then((user) => res.status(201).send({
       _id: user._id,
       name: user.name,
       about: user.about,
       avatar: user.avatar,
     }))
-    .catch((err) => {
-      if (err.name === "ValidationError") {
-        return res.status(400).send({
-          message: "Переданы некорректные данные при создании пользователя.",
-        });
-      }
-      return res.status(500).send({ message: "Ошибка на стороне сервера" });
-    });
+    .catch((error) => handleValidationError(error, res));
 };
 
 export const getUsers = (req, res) => {
   User.find({})
-    .then((users) => res.status(200).send(users))
+    .then((users) => res.send(users))
     .catch(() => res.status(500).send({ message: "Ошибка на стороне сервера" }));
 };
 
@@ -36,7 +38,12 @@ export const getUserById = (req, res) => {
       if (error.message === "NotFoundError") {
         return res.status(404).send({ message: "Пользователь не найден" });
       }
-      return res.status(500).send({ message: "Произошла ошибка" });
+      if (error.name === "CastError") {
+        return res
+          .status(400)
+          .send({ message: "Некорректный идентификатор карточки" });
+      }
+      return res.status(500).send({ message: "Ошибка на стороне сервера" });
     });
 };
 
@@ -57,7 +64,7 @@ export const updateProfile = (req, res) => {
       }
       return res.send(user);
     })
-    .catch(() => res.status(500).send({ message: "Произошла ошибка" }));
+    .catch((error) => handleValidationError(error, res));
 };
 
 export const updateAvatar = (req, res) => {
@@ -77,5 +84,5 @@ export const updateAvatar = (req, res) => {
       }
       return res.send(user);
     })
-    .catch(() => res.status(500).send({ message: "Произошла ошибка" }));
+    .catch((error) => handleValidationError(error, res));
 };

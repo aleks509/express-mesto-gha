@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import validator from "validator";
 
 const userScheme = new mongoose.Schema(
   {
@@ -22,6 +23,10 @@ const userScheme = new mongoose.Schema(
     },
     avatar: {
       type: String,
+      validate: {
+        validator: (value) => validator.isURL(value),
+        message: "Некорректный URL",
+      },
       ruquired: true,
     },
   },

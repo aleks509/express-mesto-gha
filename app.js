@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import bodyParser from "body-parser";
 import express from "express";
+import helmet from "helmet";
 import router from "./routes/index";
 
 const { PORT = 3000 } = process.env;
@@ -18,7 +19,7 @@ app.use((req, res, next) => {
 
   next();
 });
-
+app.use(helmet());
 app.use(router);
 
 app.listen(PORT, () => {

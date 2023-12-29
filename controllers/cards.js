@@ -1,9 +1,18 @@
 import Card from "../models/Card";
 
+const handleCastError = (error, res) => {
+  if (error.name === "CastError") {
+    return res
+      .status(400)
+      .send({ message: "Некорректный идентификатор карточки" });
+  }
+  return res.status(500).send({ message: "Ошибка на стороне сервера" });
+};
+
 export const createCard = (req, res) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
-    .then((card) => res.status(200).send(card))
+    .then((card) => res.status(201).send(card))
     .catch((err) => {
       if (err.name === "ValidationError") {
         return res.status(400).send({
@@ -16,7 +25,7 @@ export const createCard = (req, res) => {
 
 export const getCards = (req, res) => {
   Card.find({})
-    .then((cards) => res.status(200).send(cards))
+    .then((cards) => res.send(cards))
     .catch(() => res.status(500).send({ message: "Ошибка на стороне сервера" }));
 };
 
@@ -28,9 +37,11 @@ export const deleteCard = (req, res) => {
       if (!card) {
         return res.status(404).send({ message: "Карточка не найдена" });
       }
-      return res.status(200).send({ message: "Карточка успешно удалена", card });
+      return res
+        .status(200)
+        .send({ message: "Карточка успешно удалена", card });
     })
-    .catch(() => res.status(500).send({ message: "Ошибка на стороне сервера" }));
+    .catch((error) => handleCastError(error, res));
 };
 
 export const likeCard = (req, res) => {
@@ -45,10 +56,10 @@ export const likeCard = (req, res) => {
         return res.status(404).send({ message: "Карточка не найдена" });
       }
       return res
-        .status(201)
+        .status(200)
         .send({ message: "Вам понравилась эта карточка", card });
     })
-    .catch(() => res.status(404).send({ message: "Карточка не найдена" }));
+    .catch((error) => handleCastError(error, res));
 };
 
 export const dislikeCard = (req, res) => {
@@ -66,5 +77,5 @@ export const dislikeCard = (req, res) => {
         .status(200)
         .send({ message: "Вам разонравилась карточка:(", card });
     })
-    .catch(() => res.status(500).send({ message: "Ошибка на стороне сервера" }));
+    .catch((error) => handleCastError(error, res));
 };
