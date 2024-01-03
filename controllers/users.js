@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 // import cookieParser from "cookie-parser";
 import User from "../models/User";
+import NotFoundError from "../errors/NotFoundError";
 
 const MONGO_ERROR_CODE_DUPLICATE = 11000;
 
@@ -40,7 +41,7 @@ export const login = (req, res) => {
 export const getUserInfo = (req, res) => {
   const { email } = req.body;
   User.findOne({ email })
-    .orFail(() => new Error("NotFoundError"))
+    .orFail(() => new NotFoundError("Пользователь не найден"))
     .then((user) => {
       res.status(200).send(user);
     })

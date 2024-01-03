@@ -4,11 +4,9 @@ const handleAuthError = (res) => {
   res.status(401).send({ message: "Необходима авторизация" });
 };
 
-const extractBearerToken = (header) => {
-  return header.replace("Bearer ", "");
-};
+const extractBearerToken = (header) => header.replace("Bearer ", "");
 
-export const auth = (req, res, next) => {
+const auth = (req, res, next) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith("Bearer ")) {
@@ -26,4 +24,7 @@ export const auth = (req, res, next) => {
   req.user = payload; // записываем пейлоуд в объект запроса
 
   next(); // пропускаем запрос дальше
+  return undefined;
 };
+
+export default auth;
