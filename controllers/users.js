@@ -3,25 +3,28 @@ import jwt from "jsonwebtoken";
 // import cookieParser from "cookie-parser";
 import User from "../models/User";
 import NotFoundError from "../errors/NotFoundError";
+import ValidationError from "../errors/ValidationError";
+import UnauthorizedError from "../errors/UnauthorizedError";
+import ConflictError from "../errors/ConflictError";
+
+const { NODE_ENV, JWT_SECRET } = process.env;
 
 const MONGO_ERROR_CODE_DUPLICATE = 11000;
+const CREATED_CODE = 201;
+// const BAD_REQUEST_ERROR_CODE = 400;
+// const UNAUTHORIZED_ERROR_CODE = 401;
+// const NOT_FOUND_ERROR_CODE = 404;
+// const CONFLICT_ERROR_CODE = 409;
+// const INTERNAL_SERVER_ERROR_CODE = 500;
+const SOLT_ROUND = 10;
 
-const handleValidationError = (error, res) => {
-  if (error.name === "ValidationError") {
-    return res
-      .status(400)
-      .send({ message: "Переданы некорректные данные" });
-  }
-  return res.status(500).send({ message: "Ошибка на стороне сервера" });
-};
-
-export const login = (req, res) => {
-  const { email, password } = req.body;
+export const login = (req, res, next) => {
+  const { email, password } = req.body || {};
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign(
         { _id: user._id },
-        process.env.JWT_SECRET,
+        NODE_ENV === "production" ? JWT_SECRET : "some-secret-key",
         { expiresIn: "7d" },
       );
 
@@ -29,40 +32,36 @@ export const login = (req, res) => {
         .cookie("jwt", token, {
           maxAge: 3600000 * 24 * 7,
           httpOnly: true,
-          sameSite: true, // добавили опцию
+          sameSite: true,
         })
-        .end(); // если у ответа нет тела, можно использовать метод end
+        .end();
     })
-    .catch((err) => {
-      res.status(401).send({ message: err.message });
-    });
+    .catch(next);
 };
 
-export const getUserInfo = (req, res) => {
+export const getUserInfo = (req, res, next) => {
   const { email } = req.body;
   User.findOne({ email })
-    .orFail(() => new NotFoundError("Пользователь не найден"))
-    .then((user) => {
-      res.status(200).send(user);
+  // метод orFail обрабатывает случаи запросов к БД, которые не возвращают результат
+    .orFail(() => {
+      throw new NotFoundError("Пользователь не найден");
     })
-    .catch((error) => {
-      if (error.message === "NotFoundError") {
-        return res.status(404).send({ message: "Пользователь не найден" });
-      }
-      return res.status(500).send({ message: "Ошибка на стороне сервера" });
-    });
+    .then((user) => {
+      res.send(user);
+    })
+    .catch(next);
 };
 
-export const createUser = (req, res) => {
+export const createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
-  bcrypt.hash(password, 10)
+  bcrypt.hash(password, SOLT_ROUND)
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
     }))
 
-    .then((user) => res.status(201).send({
+    .then((user) => res.status(CREATED_CODE).send({
       _id: user._id,
       name: user.name,
       about: user.about,
@@ -72,39 +71,36 @@ export const createUser = (req, res) => {
     }))
     .catch((error) => {
       if (error.code === MONGO_ERROR_CODE_DUPLICATE) {
-        return res.status(409).send({ message: "Такой пользователь уже существует" });
+        return next(new ConflictError("Такой пользователь уже существует"));
       }
-      return handleValidationError(error, res);
+      return next(error);
     });
 };
 
-export const getUsers = (req, res) => {
+export const getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send(users))
-    .catch(() => res.status(500).send({ message: "Ошибка на стороне сервера" }));
+    .catch(next);
 };
 
-export const getUserById = (req, res) => {
+export const getUserById = (req, res, next) => {
   const { _id } = req.user;
   User.findById(_id)
-    .orFail(() => new Error("NotFoundError"))
+    .orFail(() => {
+      throw new NotFoundError("Пользователь не найден");
+    })
     .then((user) => {
-      res.status(200).send(user);
+      res.send(user);
     })
     .catch((error) => {
-      if (error.message === "NotFoundError") {
-        return res.status(404).send({ message: "Пользователь не найден" });
-      }
       if (error.name === "CastError") {
-        return res
-          .status(400)
-          .send({ message: "Некорректный идентификатор карточки" });
+        return next(new ValidationError("Некорректный идентификатор карточки"));
       }
-      return res.status(500).send({ message: "Ошибка на стороне сервера" });
+      return next(error);
     });
 };
 
-export const updateProfile = (req, res) => {
+export const updateProfile = (req, res, next) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -117,14 +113,14 @@ export const updateProfile = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        return res.status(404).send({ message: "Пользователь не найден" });
+        throw new NotFoundError("Пользователь не найден");
       }
       return res.send(user);
     })
-    .catch((error) => handleValidationError(error, res));
+    .catch(next);
 };
 
-export const updateAvatar = (req, res) => {
+export const updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -137,9 +133,9 @@ export const updateAvatar = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        return res.status(404).send({ message: "Пользователь не найден" });
+        throw new NotFoundError("Пользователь не найден");
       }
       return res.send(user);
     })
-    .catch((error) => handleValidationError(error, res));
+    .catch(next);
 };

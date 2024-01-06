@@ -21,8 +21,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(helmet());
 
-app.post("/signin", login);
-app.post("/signup", createUser);
+app.post("/signin", login); // log-in with your credentials
+app.post("/signup", createUser); // регистрация
 
 app.use(auth);
 
@@ -32,19 +32,20 @@ router.all("*", (req, res) => res.status(404).send({ message: "Запрашив�
 
 app.use(router);
 
-// app.use((err, req, res, next) => {
-//   // если у ошибки нет статуса, выставляем 500
-//   const { statusCode = 500, message } = err;
+app.use((err, req, res, next) => {
+  // res.status(err.statusCode).send({ message: err.message });
+  // если у ошибки нет статуса, выставляем 500
+  const { statusCode = 500, message } = err;
 
-//   res
-//     .status(statusCode)
-//     .send({
-//       // проверяем статус и выставляем сообщение в зависимости от него
-//       message: statusCode === 500
-//         ? "На сервере произошла ошибка"
-//         : message,
-//     });
-// });
+  res
+    .status(statusCode)
+    .send({
+      // проверяем статус и выставляем сообщение в зависимости от него
+      message: statusCode === 500
+        ? "На сервере произошла ошибка"
+        : message,
+    });
+});
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
