@@ -15,6 +15,7 @@ const app = express();
 const router = Router();
 app.use(cookieParser());
 
+console.log("MONGO_URL value:", MONGO_URL);
 mongoose.connect(MONGO_URL);
 
 app.use(bodyParser.json());
