@@ -1,6 +1,6 @@
-import Card from "../models/Card";
-import NotFoundError from "../errors/NotFoundError";
-import ValidationError from "../errors/ValidationError";
+import Card from "../models/Card.js";
+import NotFoundError from "../errors/NotFoundError.js";
+import ValidationError from "../errors/ValidationError.js";
 // import UnauthorizedError from "../errors/UnauthorizedError";
 // import ConflictError from "../errors/ConflictError";
 
@@ -17,7 +17,11 @@ export const createCard = (req, res, next) => {
     .then((card) => res.status(CREATED_CODE).send(card))
     .catch((err) => {
       if (err.name === "ValidationError") {
-        next(new ValidationError("Переданы некорректные данные при создании карточки."));
+        next(
+          new ValidationError(
+            "Переданы некорректные данные при создании карточки."
+          )
+        );
       } else {
         next(err);
       }
@@ -38,8 +42,7 @@ export const deleteCard = (req, res, next) => {
       if (!card) {
         throw new NotFoundError("Карточка не найдена");
       }
-      return res
-        .send({ message: "Карточка успешно удалена", card });
+      return res.send({ message: "Карточка успешно удалена", card });
     })
     .catch(next);
 };
@@ -48,15 +51,14 @@ export const likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
-    { new: true },
+    { new: true }
   )
     .populate(["owner", "likes"])
     .then((card) => {
       if (!card) {
         throw new NotFoundError("Карточка не найдена");
       }
-      return res
-        .send({ message: "Вам понравилась эта карточка", card });
+      return res.send({ message: "Вам понравилась эта карточка", card });
     })
     .catch(next);
 };
@@ -65,15 +67,14 @@ export const dislikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } }, // убрать _id из массива
-    { new: true },
+    { new: true }
   )
     .populate(["owner", "likes"])
     .then((card) => {
       if (!card) {
         throw new NotFoundError("Карточка не найдена");
       }
-      return res
-        .send({ message: "Вам разонравилась карточка:(", card });
+      return res.send({ message: "Вам разонравилась карточка:(", card });
     })
     .catch(next);
 };

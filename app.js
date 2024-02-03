@@ -4,10 +4,11 @@ import express, { Router } from "express";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import "dotenv/config";
-import { createUser, login } from "./controllers/users";
-import userRouter from "./routes/users";
-import cardRouter from "./routes/cards";
-import auth from "./middlewares/auth";
+
+import { createUser, login } from "./controllers/users.js";
+import userRouter from "./routes/users.js";
+import cardRouter from "./routes/cards.js";
+import auth from "./middlewares/auth.js";
 
 const { PORT, MONGO_URL } = process.env;
 const app = express();
@@ -28,23 +29,21 @@ app.use(auth);
 
 router.use("/users", userRouter);
 router.use("/cards", cardRouter);
-router.all("*", (req, res) => res.status(404).send({ message: "Запрашиваемый ресурс не найден" }));
+router.all("*", (req, res) =>
+  res.status(404).send({ message: "Запрашиваемый ресурс не найден" })
+);
 
 app.use(router);
-
+// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   // res.status(err.statusCode).send({ message: err.message });
   // если у ошибки нет статуса, выставляем 500
   const { statusCode = 500, message } = err;
 
-  res
-    .status(statusCode)
-    .send({
-      // проверяем статус и выставляем сообщение в зависимости от него
-      message: statusCode === 500
-        ? "На сервере произошла ошибка"
-        : message,
-    });
+  res.status(statusCode).send({
+    // проверяем статус и выставляем сообщение в зависимости от него
+    message: statusCode === 500 ? "На сервере произошла ошибка" : message,
+  });
 });
 
 app.listen(PORT, () => {

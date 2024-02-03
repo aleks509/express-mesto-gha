@@ -18,7 +18,8 @@ const userScheme = new mongoose.Schema(
     },
     avatar: {
       type: String,
-      default: "https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png",
+      default:
+        "https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png",
       validate: {
         validator: (value) => validator.isURL(value),
         message: "Некорректный URL",
@@ -44,23 +45,21 @@ const userScheme = new mongoose.Schema(
   },
   { versionKey: false },
 );
-
+// eslint-disable-next-line func-names
 userScheme.statics.findUserByCredentials = function (email, password) {
-  return this.findOne({ email })
-    .then((user) => {
-      if (!user) {
+  return this.findOne({ email }).then((user) => {
+    if (!user) {
+      return Promise.reject(new Error("Неправильные почта или пароль"));
+    }
+
+    return bcrypt.compare(password, user.password).then((matched) => {
+      if (!matched) {
         return Promise.reject(new Error("Неправильные почта или пароль"));
       }
 
-      return bcrypt.compare(password, user.password)
-        .then((matched) => {
-          if (!matched) {
-            return Promise.reject(new Error("Неправильные почта или пароль"));
-          }
-
-          return user; // теперь user доступен
-        });
+      return user; // теперь user доступен
     });
+  });
 };
 
 export default mongoose.model("user", userScheme);

@@ -1,11 +1,10 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 // import cookieParser from "cookie-parser";
-import User from "../models/User";
-import NotFoundError from "../errors/NotFoundError";
-import ValidationError from "../errors/ValidationError";
-import UnauthorizedError from "../errors/UnauthorizedError";
-import ConflictError from "../errors/ConflictError";
+import User from "../models/User.js";
+import NotFoundError from "../errors/NotFoundError.js";
+import ValidationError from "../errors/ValidationError.js";
+import ConflictError from "../errors/ConflictError.js";
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 
@@ -25,7 +24,7 @@ export const login = (req, res, next) => {
       const token = jwt.sign(
         { _id: user._id },
         NODE_ENV === "production" ? JWT_SECRET : "some-secret-key",
-        { expiresIn: "7d" },
+        { expiresIn: "7d" }
       );
 
       res
@@ -42,7 +41,7 @@ export const login = (req, res, next) => {
 export const getUserInfo = (req, res, next) => {
   const { email } = req.body;
   User.findOne({ email })
-  // метод orFail обрабатывает случаи запросов к БД, которые не возвращают результат
+    // метод orFail обрабатывает случаи запросов к БД, которые не возвращают результат
     .orFail(() => {
       throw new NotFoundError("Пользователь не найден");
     })
@@ -53,22 +52,29 @@ export const getUserInfo = (req, res, next) => {
 };
 
 export const createUser = (req, res, next) => {
-  const {
-    name, about, avatar, email, password,
-  } = req.body;
-  bcrypt.hash(password, SOLT_ROUND)
-    .then((hash) => User.create({
-      name, about, avatar, email, password: hash,
-    }))
+  const { name, about, avatar, email, password } = req.body;
+  bcrypt
+    .hash(password, SOLT_ROUND)
+    .then((hash) =>
+      User.create({
+        name,
+        about,
+        avatar,
+        email,
+        password: hash,
+      })
+    )
 
-    .then((user) => res.status(CREATED_CODE).send({
-      _id: user._id,
-      name: user.name,
-      about: user.about,
-      avatar: user.avatar,
-      email: user.email,
-      password: user.password,
-    }))
+    .then((user) =>
+      res.status(CREATED_CODE).send({
+        _id: user._id,
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        email: user.email,
+        password: user.password,
+      })
+    )
     .catch((error) => {
       if (error.code === MONGO_ERROR_CODE_DUPLICATE) {
         return next(new ConflictError("Такой пользователь уже существует"));
@@ -109,7 +115,7 @@ export const updateProfile = (req, res, next) => {
       new: true,
       runValidators: true,
       upsert: true,
-    },
+    }
   )
     .then((user) => {
       if (!user) {
@@ -129,7 +135,7 @@ export const updateAvatar = (req, res, next) => {
       new: true,
       runValidators: true,
       upsert: true,
-    },
+    }
   )
     .then((user) => {
       if (!user) {

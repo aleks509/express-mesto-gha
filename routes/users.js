@@ -1,11 +1,12 @@
 import { Router } from "express";
+/* eslint-disable */
 import {
   getUserInfo,
   getUsers,
   getUserById,
   updateProfile,
   updateAvatar,
-} from "../controllers/users";
+} from "../controllers/users.js";
 
 const userRouter = Router();
 

@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "nodemon app.js",
-    "dev": "nodemon --experimental-modules --es-module-specifier-resolution=node --trace-warnings app.js",
+    "dev": "nodemon --trace-warnings app.js",
     "lint": "npx eslint ."
   },
   "keywords": [],
@@ -22,6 +22,8 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "validator": "^13.11.0"
   },
   "devDependencies": {
@@ -29,6 +31,6 @@
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.25.2",
     "eslint-plugin-react": "^7.33.2",
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.0.3"
   }
 }
