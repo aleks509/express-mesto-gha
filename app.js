@@ -9,6 +9,7 @@ import { createUser, login } from "./controllers/users.js";
 import userRouter from "./routes/users.js";
 import cardRouter from "./routes/cards.js";
 import auth from "./middlewares/auth.js";
+import { requestLogger, errorLogger } from "./middlewares/logger.js";
 
 const { PORT, MONGO_URL } = process.env;
 const app = express();
@@ -23,6 +24,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(helmet());
 
+app.use(requestLogger);
+
 app.post("/signin", login); // log-in with your credentials
 app.post("/signup", createUser); // регистрация
 
@@ -35,6 +38,8 @@ router.all("*", (req, res) =>
 );
 
 app.use(router);
+
+app.use(errorLogger);
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   // res.status(err.statusCode).send({ message: err.message });
